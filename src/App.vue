@@ -4,7 +4,7 @@
       <h3 class="app-title my-3 pb-3">Dream Builder Guest Book Demo</h3>
 
       <!-- 留言表單 -->
-      <form ref="msgForm" @submit.prevent>
+      <form ref="msgForm" @submit.prevent @reset.prevent="resetForm">
         <div class="d-flex">
           <div class="mr-2">
             <input
@@ -12,6 +12,9 @@
               class="form-control w-auto"
               placeholder="作者"
             />
+            <small class="text-danger" v-if="!validation.author"
+              >請填作者</small
+            >
           </div>
           <div class="mr-2">
             <input
@@ -19,6 +22,7 @@
               class="form-control w-auto"
               placeholder="標題"
             />
+            <small class="text-danger" v-if="!validation.title">請填標題</small>
           </div>
           <div class="mr-2">
             <select v-model="emotion" class="form-control w-aut">
@@ -27,6 +31,9 @@
               <option value="angry">生氣</option>
               <option value="sad">難過</option>
             </select>
+            <small class="text-danger" v-if="!validation.emotion"
+              >請選情緒</small
+            >
           </div>
         </div>
         <div class="d-flex mt-2 mb-3 align-items-start">
@@ -37,6 +44,9 @@
               class="form-control"
               placeholder="留言"
             ></textarea>
+            <small class="text-danger" v-if="!validation.content"
+              >請填留言</small
+            >
           </div>
           <button class="btn btn-primary" @click="leaveMessage">留言</button>
         </div>
@@ -53,7 +63,24 @@
             <div class="mr-2">
               {{ message.author }} 於 {{ message.modified }} 發表
             </div>
-            <div>覺得 {{ message.emotion }}</div>
+            <div>
+              覺得
+              <img
+                src="./assets/happy.png"
+                style="height: 2rem"
+                v-if="message.emotion === 'happy'"
+              />
+              <img
+                src="./assets/angry.png"
+                style="height: 2rem"
+                v-if="message.emotion === 'angry'"
+              />
+              <img
+                src="./assets/sad.png"
+                style="height: 2rem"
+                v-if="message.emotion === 'sad'"
+              />
+            </div>
           </div>
           <hr />
           <div style="white-space: pre">{{ message.content }}</div>
@@ -108,6 +135,12 @@ export default {
       title: "",
       content: "",
       emotion: "",
+      validation: {
+        author: true,
+        title: true,
+        content: true,
+        emotion: true,
+      },
     };
   },
 
@@ -117,7 +150,41 @@ export default {
       this.messages = data;
     },
 
+    validate() {
+      this.validation.author = !!this.author;
+      this.validation.title = !!this.title;
+      this.validation.emotion = !!this.emotion;
+      this.validation.content = !!this.content;
+
+      return (
+        this.validation.author &&
+        this.validation.title &&
+        this.validation.emotion &&
+        this.validation.content
+      );
+    },
+
+    clearValidation() {
+      this.validation.author = true;
+      this.validation.title = true;
+      this.validation.emotion = true;
+      this.validation.content = true;
+    },
+
+    resetForm() {
+      this.author = "";
+      this.title = "";
+      this.emotion = "";
+      this.content = "";
+
+      this.clearValidation();
+    },
+
     async leaveMessage() {
+      if (!this.validate()) {
+        return;
+      }
+
       const payload = {
         author: this.author,
         title: this.title,
